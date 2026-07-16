@@ -1,4 +1,5 @@
 /*.yaml
+/bootstrap/**/charts/
 *.crt
 *.key
 *.srl
