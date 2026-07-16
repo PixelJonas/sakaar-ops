@@ -1,2 +1,3 @@
 resources:
   - clustersecretstore-doppler.yaml
+  - networkpolicy-allow-doppler-egress.yaml
