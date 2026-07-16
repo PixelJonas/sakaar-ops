@@ -1,0 +1,169 @@
+apiVersion: argoproj.io/v1beta1
+kind: ArgoCD
+metadata:
+  name: openshift-gitops
+  namespace: openshift-gitops
+spec:
+  resourceTrackingMethod: annotation
+  applicationSet: {}
+  extraConfig:
+    exec.enabled: "true"
+    resource.respectRBAC: "normal"
+    resource.ignoreResourceUpdatesEnabled: "true"
+    resource.compareoptions: |
+      ignoreAggregatedRoles: true
+    resource.customizations.ignoreResourceUpdates.external-secrets.io_ExternalSecret:
+      |
+      jsonPointers:
+      - /status/refreshTime
+    accounts.admin: apiKey, login
+  kustomizeBuildOptions: "--enable-helm --enable-alpha-plugins"
+  controller:
+    extraCommandArgs:
+      - "--persist-resource-health=false"
+    resources:
+      limits:
+        memory: 4Gi
+      requests:
+        cpu: 1000m
+        memory: 3Gi
+  monitoring:
+    enabled: true
+  redis:
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+  server:
+    route:
+      enabled: true
+      tls:
+        termination: reencrypt
+        insecureEdgeTerminationPolicy: Redirect
+  notifications:
+    enabled: true
+  resourceHealthChecks:
+    - group: argoproj.io
+      kind: Application
+      check: |
+        hs = {}
+        hs.status = "Progressing"
+        hs.message = ""
+        if obj.status ~= nil then
+          if obj.status.health ~= nil then
+            hs.status = obj.status.health.status
+            hs.message = obj.status.health.message
+          end
+        end
+        return hs
+    - group: operators.coreos.com
+      kind: Subscription
+      check: |
+        health_status = {}
+        if obj.status ~= nil then
+          if obj.status.conditions ~= nil then
+            numDegraded = 0
+            numPending = 0
+            numSuspended = 0
+            msg = ""
+            for i, condition in pairs(obj.status.conditions) do
+              msg = msg .. i .. ": " .. condition.type .. " | " .. condition.status .. " | " .. (condition.reason and condition.reason or '') .. "\n"
+              if condition.type == "InstallPlanPending" and condition.status == "True" then
+                if condition.reason == "RequiresApproval" then
+                  numSuspended = numSuspended + 1
+                else
+                  numPending = numPending + 1
+                end
+              elseif (condition.type == "InstallPlanMissing" and condition.reason ~= "ReferencedInstallPlanNotFound") then
+                numDegraded = numDegraded + 1
+              elseif (condition.type == "CatalogSourcesUnhealthy" or condition.type == "InstallPlanFailed") and condition.status == "True" then
+                numDegraded = numDegraded + 1
+              elseif (condition.type == "ResolutionFailed" and condition.reason ~= "ConstraintsNotSatisfiable") then
+                numDegraded = numDegraded + 1
+              elseif (condition.type == 'ChannelDeprecated' and condition.status == "True") then
+                numDegraded = numDegraded + 1
+              end
+            end
+            if numDegraded > 0 then
+              health_status.status = "Degraded"
+              health_status.message = msg
+              return health_status
+            elseif numSuspended > 0 then
+              health_status.status = "Suspended"
+              health_status.message = msg
+              return health_status
+            elseif numPending > 0 then
+              health_status.status = "Progressing"
+              health_status.message = "An install plan for a subscription is pending installation"
+              return health_status
+            else
+              health_status.status = "Healthy"
+              health_status.message = msg
+              return health_status
+            end
+          end
+        end
+        health_status.status = "Progressing"
+        health_status.message = "An install plan for a subscription is pending installation"
+        return health_status
+    - group: operators.coreos.com
+      kind: InstallPlan
+      check: |
+        hs = {}
+        if obj.status ~= nil then
+          if obj.status.phase ~= nil then
+            if obj.status.phase == "Complete" then
+              hs.status = "Healthy"
+              hs.message = obj.status.phase
+              return hs
+            elseif obj.status.phase == "RequiresApproval" then
+              hs.status = "Suspended"
+              hs.message = obj.status.phase
+              return hs
+            else
+              hs.status = "Progressing"
+              hs.message = obj.status.phase
+              return hs
+            end
+          end
+        end
+        hs.status = "Progressing"
+        hs.message = "Waiting for InstallPlan to complete"
+        return hs
+    - kind: PersistentVolumeClaim
+      check: |
+        hs = {}
+        if (obj.status ~= nil and obj.status.phase ~= nil) then
+            if obj.status.phase == "Pending" or obj.status.phase == "Bound" then
+                hs.status = "Healthy"
+                hs.message = obj.status.phase
+                return hs
+            elseif obj.status.phase == "Lost" then
+                hs.status = "Degraded"
+                hs.message = obj.status.phase
+                return hs
+            end
+        end
+        hs.status = "Unknown"
+        hs.message = "Waiting for PVC status"
+        return hs
+  resourceIgnoreDifferences:
+    resourceIdentifiers:
+      - group: route.openshift.io
+        kind: Route
+        customization:
+          jsonPointers:
+            - /status/ingress
+            - /metadata/annotations
+  ha:
+    enabled: false
+  rbac:
+    defaultPolicy: "role:none"
+    policy: |
+      p, role:none, *, *, */*, deny
+      g, system:cluster-admins, role:admin
+      g, cluster-admins, role:admin
+    scopes: "[groups]"
