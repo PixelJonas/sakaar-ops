@@ -38,3 +38,11 @@ applications:
       namespace: cert-manager-operator
     source:
       path: components-infra/certificates/base
+
+  openshift-oauth-htpasswd:
+    annotations:
+      argocd.argoproj.io/sync-wave: "3"
+    destination:
+      namespace: openshift-config
+    source:
+      path: components-infra/openshift-oauth-htpasswd/base
