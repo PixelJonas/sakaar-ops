@@ -1,0 +1,9 @@
+/*.yaml
+*.crt
+*.key
+*.srl
+*.csr
+*.pem
+kubeconfig*
+CLAUDE.local.md
+/tmp

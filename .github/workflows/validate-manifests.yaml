@@ -1,0 +1,24 @@
+name: Validate Manifests
+on:
+  push:
+    branches:
+      - "*"
+  pull_request:
+    branches:
+      - "*"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
+      - name: Install yamllint
+        run: pip install 'yamllint>=1.25.0'
+      - name: Verify Kustomize CLI Installation
+        run: |
+          which kustomize
+          kustomize version
+      - name: Validate Manifests
+        run: |
+          ./scripts/validate_manifests.sh
