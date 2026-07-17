@@ -46,3 +46,11 @@ applications:
       namespace: openshift-config
     source:
       path: components-infra/openshift-oauth-htpasswd/base
+
+  claude-admin:
+    annotations:
+      argocd.argoproj.io/sync-wave: "3"
+    destination:
+      namespace: claude-admin
+    source:
+      path: components-infra/claude-admin/base
