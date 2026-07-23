@@ -10,3 +10,4 @@ helmCharts:
     version: 0.14.2
     releaseName: arc
     namespace: actions-runner-system
+    includeCRDs: true
