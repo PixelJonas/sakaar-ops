@@ -31,6 +31,14 @@ applications:
     source:
       path: components-infra/cert-manager-operator/aggregate/overlays/letsencrypt
 
+  actions-runner-controller:
+    annotations:
+      argocd.argoproj.io/sync-wave: "2"
+    destination:
+      namespace: actions-runner-system
+    source:
+      path: components-infra/actions-runner-controller/base
+
   certificates:
     annotations:
       argocd.argoproj.io/sync-wave: "3"

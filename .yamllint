@@ -3,6 +3,7 @@ extends: default
 ignore: |
   bootstrap/base/charts/
   bootstrap/overlays/sakaar/charts/
+  components-infra/**/charts/
 
 rules:
   comments-indentation: disable
