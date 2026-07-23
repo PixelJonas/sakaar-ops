@@ -1,0 +1,10 @@
+FROM ghcr.io/actions/actions-runner:2.336.0
+
+USER root
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends podman uidmap \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /etc/containers \
+    && printf '[storage]\ndriver = "vfs"\n' > /etc/containers/storage.conf
+
+USER runner
