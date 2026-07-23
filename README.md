@@ -40,10 +40,24 @@ bootstrap/
   initial/          # One-time ArgoCD installation manifests
   base/             # App-of-apps ApplicationSet + cluster-config AppProject
   overlays/sakaar/  # This cluster's application list
-components-infra/   # ESO, cert-manager-operator, certificates
+components-infra/   # ESO, cert-manager-operator, certificates,
+                     # actions-runner-controller, gha-runner-scale-set-palbuddy
 components-apps/    # Reserved for future application workloads (currently empty)
+containers/         # Custom images built by this repo's own CI (gha-runner)
 scripts/            # validate_manifests.sh
 ```
+
+## Self-hosted GitHub Actions runners
+
+`components-infra/actions-runner-controller/` deploys actions-runner-controller
+(ARC), the cluster-wide controller. `components-infra/gha-runner-scale-set-palbuddy/`
+deploys the per-repo runner scale set for `PixelJonas/palbuddy`, authenticated via
+a GitHub App (credentials in Doppler `infra-ops`/`prd`:
+`PALBUDDY_GHA_APP_ID`/`PALBUDDY_GHA_INSTALLATION_ID`/`PALBUDDY_GHA_PRIVATE_KEY`).
+Runner pods use `containers/gha-runner/Containerfile` (upstream `actions-runner`
++ rootful podman — see that repo's design spec for why rootful, not rootless or
+DinD), built by `.github/workflows/build-gha-runner-image.yaml` on push to
+`containers/gha-runner/**` and pushed to `ghcr.io/pixeljonas/sakaar-gha-runner`.
 
 ## Validation
 
