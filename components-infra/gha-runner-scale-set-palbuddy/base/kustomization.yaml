@@ -7,7 +7,7 @@ commonAnnotations:
 resources:
   - namespace.yaml
   - externalsecret.yaml
-  - anyuid-clusterrolebinding.yaml
+  - privileged-clusterrolebinding.yaml
 
 helmCharts:
   - name: gha-runner-scale-set
