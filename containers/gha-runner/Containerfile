@@ -2,7 +2,7 @@ FROM ghcr.io/actions/actions-runner:2.336.0
 
 USER root
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends docker.io build-essential python3-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-USER runner
+    && apt-get install -y --no-install-recommends podman build-essential python3-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /etc/containers \
+    && printf '[storage]\ndriver = "vfs"\n' > /etc/containers/storage.conf
