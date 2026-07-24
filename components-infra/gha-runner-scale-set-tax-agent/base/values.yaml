@@ -2,7 +2,7 @@ githubConfigUrl: "https://github.com/PixelJonas/tax-agent"
 githubConfigSecret: arc-runner-set-tax-agent-github-secret
 runnerScaleSetName: "arc-runner-set-tax-agent"
 minRunners: 0
-maxRunners: 3
+maxRunners: 10
 controllerServiceAccount:
   namespace: actions-runner-system
   name: arc-gha-rs-controller
