@@ -14,20 +14,6 @@ default:
       repoURL: https://github.com/PixelJonas/sakaar-ops.git
       targetRevision: HEAD
 
-projects:
-  cluster-config:
-    description: Project for overall cluster configuration
-    namespace: openshift-gitops
-    sourceRepos:
-      - https://github.com/PixelJonas/sakaar-ops
-    destinations: |
-      - namespace: '*'
-        server: https://kubernetes.default.svc
-    extraFields: |
-      clusterResourceWhitelist:
-      - group: '*'
-        kind: '*'
-
 applications:
   external-secrets:
     annotations:
