@@ -6,7 +6,7 @@ metadata:
   labels:
     app.kubernetes.io/name: devland
 spec:
-  host: devland.janz.digital
+  host: devland.janz.cloud
   to:
     kind: Service
     name: devland
